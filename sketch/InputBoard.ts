@@ -168,7 +168,7 @@ const inputCanvas = (s: p5) => {
 			const type = pieces[i].type;
 			const info = pieceInfos.filter((t) => t.type == type)[0];
 
-			const isPressed = color.toString() == info.col.toString();
+			const isPressed = areColorsEqual(color, info.col);
 
 			if (!isPressed) continue;
 
@@ -241,6 +241,13 @@ const inputCanvas = (s: p5) => {
 		return false;
 	}
 
+	function areColorsEqual(color1: p5.Color, color2: p5.Color): boolean {
+		if (Math.abs(s.red(color1) - s.red(color2)) > 5) return false;
+		if (Math.abs(s.green(color1) - s.green(color2)) > 5) return false;
+		if (Math.abs(s.blue(color1) - s.blue(color2)) > 5) return false;
+		return true;
+	}
+
 	s.windowResized = () => {
 		s.resizeCanvas(s.windowWidth, s.windowHeight / 2 + 100);
 	};
@@ -260,7 +267,7 @@ const inputCanvas = (s: p5) => {
 
 				const color = s.color(s.get(realX, realY));
 
-				const type = pieceInfos.find((p) => p.col.toString() == color.toString())?.type;
+				const type = pieceInfos.find((p) => areColorsEqual(color, p.col))?.type;
 
 				boardString += type == undefined ? "." : PieceType[type];
 			}

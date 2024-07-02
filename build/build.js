@@ -182,7 +182,7 @@ var inputCanvas = function (s) {
         var _loop_2 = function (i) {
             var type = pieces[i].type;
             var info = pieceInfos.filter(function (t) { return t.type == type; })[0];
-            var isPressed = color.toString() == info.col.toString();
+            var isPressed = areColorsEqual(color, info.col);
             if (!isPressed)
                 return "continue";
             if (s.mouseButton == s.RIGHT) {
@@ -243,6 +243,15 @@ var inputCanvas = function (s) {
         }
         return false;
     }
+    function areColorsEqual(color1, color2) {
+        if (Math.abs(s.red(color1) - s.red(color2)) > 5)
+            return false;
+        if (Math.abs(s.green(color1) - s.green(color2)) > 5)
+            return false;
+        if (Math.abs(s.blue(color1) - s.blue(color2)) > 5)
+            return false;
+        return true;
+    }
     s.windowResized = function () {
         s.resizeCanvas(s.windowWidth, s.windowHeight / 2 + 100);
     };
@@ -259,7 +268,7 @@ var inputCanvas = function (s) {
                 var realX = (x + 0.5) * cellWidth + s.width / 3 - boardWidth;
                 var realY = (y + 0.5) * cellWidth + 50;
                 var color_1 = s.color(s.get(realX, realY));
-                var type = (_a = pieceInfos.find(function (p) { return p.col.toString() == color_1.toString(); })) === null || _a === void 0 ? void 0 : _a.type;
+                var type = (_a = pieceInfos.find(function (p) { return areColorsEqual(color_1, p.col); })) === null || _a === void 0 ? void 0 : _a.type;
                 boardString += type == undefined ? "." : PieceType[type];
             };
             for (var x = 0; x < 8; x++) {
