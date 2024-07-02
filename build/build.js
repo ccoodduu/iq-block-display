@@ -253,7 +253,8 @@ var inputCanvas = function (s) {
         return true;
     }
     s.windowResized = function () {
-        s.resizeCanvas(s.windowWidth, s.windowHeight / 2 + 100);
+        s.resizeCanvas(s.windowWidth - 50, s.windowHeight / 2 + 100);
+        boardDrawer.setWidth(Math.min(300, s.width / 4));
     };
     function getPhysicalPosition(piece) {
         if (piece.xGridPos == -1 && piece.yGridPos == -1)

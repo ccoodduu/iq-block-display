@@ -249,7 +249,8 @@ const inputCanvas = (s: p5) => {
 	}
 
 	s.windowResized = () => {
-		s.resizeCanvas(s.windowWidth, s.windowHeight / 2 + 100);
+		s.resizeCanvas(s.windowWidth - 50, s.windowHeight / 2 + 100);
+		boardDrawer.setWidth(Math.min(300, s.width / 4));
 	};
 
 	function getPhysicalPosition(piece: DraggablePiece): [number, number] {
