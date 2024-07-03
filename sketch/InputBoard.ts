@@ -162,37 +162,43 @@ const inputCanvas = (s: p5) => {
 	};
 
 	s.mousePressed = () => {
-		const color = s.color(s.get(s.mouseX, s.mouseY));
+		const piece = getPieceAtMouse();
 
-		for (let i = 0; i < pieces.length; i++) {
-			const type = pieces[i].type;
-			const info = pieceInfos.filter((t) => t.type == type)[0];
+		if (piece == null) return false;
 
-			const isPressed = areColorsEqual(color, info.col);
-
-			if (!isPressed) continue;
-
-			if (s.mouseButton == s.RIGHT) {
-				pieces[i].rot = (pieces[i].rot + 1) % 8;
-
-				if (isOutOfBounds(pieces[i].type)) {
-					pieces[i].xGridPos = -1;
-					pieces[i].yGridPos = -1;
-				}
-
-				return;
-			}
-			dragPieceIndex = i;
-
-			const physicalPosition = getPhysicalPosition(pieces[i]);
-			offsetX = s.mouseX - physicalPosition[0];
-			offsetY = s.mouseY - physicalPosition[1];
-			return;
+		if (s.mouseButton == s.RIGHT) {
+			rotatePiece(piece);
+			return false;
 		}
+		dragPieceIndex = pieces.indexOf(piece);
+
+		const physicalPosition = getPhysicalPosition(piece);
+		offsetX = s.mouseX - physicalPosition[0];
+		offsetY = s.mouseY - physicalPosition[1];
+		return false;
+	};
+
+	let mouseGotDragged = false;
+	s.mouseClicked = () => {
+		if (mouseGotDragged) {
+			mouseGotDragged = false;
+			return false;
+		}
+
+		const piece = getPieceAtMouse();
+		if (piece == null) return false;
+
+		rotatePiece(piece);
+		return false;
+	};
+
+	s.mouseDragged = () => {
+		mouseGotDragged = true;
+		return false;
 	};
 
 	s.mouseReleased = () => {
-		if (dragPieceIndex == -1) return;
+		if (dragPieceIndex == -1) return false;
 
 		let piece = pieces[dragPieceIndex];
 
@@ -208,7 +214,38 @@ const inputCanvas = (s: p5) => {
 			piece.xGridPos = -1;
 			piece.yGridPos = -1;
 		}
+
+		return false;
 	};
+
+	function getPieceAtMouse(): DraggablePiece | null {
+		const color = s.color(s.get(s.mouseX, s.mouseY));
+
+		for (let i = 0; i < pieces.length; i++) {
+			const type = pieces[i].type;
+			const info = pieceInfos.find((t) => t.type == type);
+
+			const isPiece = areColorsEqual(color, info.col);
+
+			if (isPiece) return pieces[i];
+		}
+
+		return null;
+	}
+
+	s.windowResized = () => {
+		s.resizeCanvas(s.windowWidth - 50, s.windowHeight / 2 + 100);
+		boardDrawer.setWidth(Math.min(300, s.width / 4));
+	};
+
+	function rotatePiece(piece: DraggablePiece) {
+		piece.rot = (piece.rot + 1) % 8;
+
+		if (isOutOfBounds(piece.type)) {
+			piece.xGridPos = -1;
+			piece.yGridPos = -1;
+		}
+	}
 
 	function isOutOfBounds(type: PieceType): boolean {
 		const piece = pieces.find((t) => t.type == type);
@@ -247,11 +284,6 @@ const inputCanvas = (s: p5) => {
 		if (Math.abs(s.blue(color1) - s.blue(color2)) > 5) return false;
 		return true;
 	}
-
-	s.windowResized = () => {
-		s.resizeCanvas(s.windowWidth - 50, s.windowHeight / 2 + 100);
-		boardDrawer.setWidth(Math.min(300, s.width / 4));
-	};
 
 	function getPhysicalPosition(piece: DraggablePiece): [number, number] {
 		if (piece.xGridPos == -1 && piece.yGridPos == -1) return [boardWidth + 50 + piece.defaultX * cellWidth, piece.defaultY * cellWidth];

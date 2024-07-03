@@ -178,36 +178,38 @@ var inputCanvas = function (s) {
         }
     };
     s.mousePressed = function () {
-        var color = s.color(s.get(s.mouseX, s.mouseY));
-        var _loop_2 = function (i) {
-            var type = pieces[i].type;
-            var info = pieceInfos.filter(function (t) { return t.type == type; })[0];
-            var isPressed = areColorsEqual(color, info.col);
-            if (!isPressed)
-                return "continue";
-            if (s.mouseButton == s.RIGHT) {
-                pieces[i].rot = (pieces[i].rot + 1) % 8;
-                if (isOutOfBounds(pieces[i].type)) {
-                    pieces[i].xGridPos = -1;
-                    pieces[i].yGridPos = -1;
-                }
-                return { value: void 0 };
-            }
-            dragPieceIndex = i;
-            var physicalPosition = getPhysicalPosition(pieces[i]);
-            offsetX = s.mouseX - physicalPosition[0];
-            offsetY = s.mouseY - physicalPosition[1];
-            return { value: void 0 };
-        };
-        for (var i = 0; i < pieces.length; i++) {
-            var state_1 = _loop_2(i);
-            if (typeof state_1 === "object")
-                return state_1.value;
+        var piece = getPieceAtMouse();
+        if (piece == null)
+            return false;
+        if (s.mouseButton == s.RIGHT) {
+            rotatePiece(piece);
+            return false;
         }
+        dragPieceIndex = pieces.indexOf(piece);
+        var physicalPosition = getPhysicalPosition(piece);
+        offsetX = s.mouseX - physicalPosition[0];
+        offsetY = s.mouseY - physicalPosition[1];
+        return false;
+    };
+    var mouseGotDragged = false;
+    s.mouseClicked = function () {
+        if (mouseGotDragged) {
+            mouseGotDragged = false;
+            return false;
+        }
+        var piece = getPieceAtMouse();
+        if (piece == null)
+            return false;
+        rotatePiece(piece);
+        return false;
+    };
+    s.mouseDragged = function () {
+        mouseGotDragged = true;
+        return false;
     };
     s.mouseReleased = function () {
         if (dragPieceIndex == -1)
-            return;
+            return false;
         var piece = pieces[dragPieceIndex];
         var xPos = s.mouseX - offsetX;
         var yPos = s.mouseY - offsetY;
@@ -218,7 +220,35 @@ var inputCanvas = function (s) {
             piece.xGridPos = -1;
             piece.yGridPos = -1;
         }
+        return false;
     };
+    function getPieceAtMouse() {
+        var color = s.color(s.get(s.mouseX, s.mouseY));
+        var _loop_2 = function (i) {
+            var type = pieces[i].type;
+            var info = pieceInfos.find(function (t) { return t.type == type; });
+            var isPiece = areColorsEqual(color, info.col);
+            if (isPiece)
+                return { value: pieces[i] };
+        };
+        for (var i = 0; i < pieces.length; i++) {
+            var state_1 = _loop_2(i);
+            if (typeof state_1 === "object")
+                return state_1.value;
+        }
+        return null;
+    }
+    s.windowResized = function () {
+        s.resizeCanvas(s.windowWidth - 50, s.windowHeight / 2 + 100);
+        boardDrawer.setWidth(Math.min(300, s.width / 4));
+    };
+    function rotatePiece(piece) {
+        piece.rot = (piece.rot + 1) % 8;
+        if (isOutOfBounds(piece.type)) {
+            piece.xGridPos = -1;
+            piece.yGridPos = -1;
+        }
+    }
     function isOutOfBounds(type) {
         var piece = pieces.find(function (t) { return t.type == type; });
         var info = pieceInfos.find(function (t) { return t.type == type; });
@@ -252,10 +282,6 @@ var inputCanvas = function (s) {
             return false;
         return true;
     }
-    s.windowResized = function () {
-        s.resizeCanvas(s.windowWidth - 50, s.windowHeight / 2 + 100);
-        boardDrawer.setWidth(Math.min(300, s.width / 4));
-    };
     function getPhysicalPosition(piece) {
         if (piece.xGridPos == -1 && piece.yGridPos == -1)
             return [boardWidth + 50 + piece.defaultX * cellWidth, piece.defaultY * cellWidth];
